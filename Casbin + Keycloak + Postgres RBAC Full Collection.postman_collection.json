@@ -1,0 +1,528 @@
+{
+  "info": {
+    "_postman_id": "1cd8f70d-687f-4b67-9528-aad604b8fc66",
+    "name": "Casbin + Keycloak + Postgres RBAC Full Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "18989454"
+  },
+  "item": [
+    {
+      "name": "1. Keycloak Authentication",
+      "item": [
+        {
+          "name": "Login as Bob (Editor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();\nif (res.access_token) {\n    // Explicitly target the active environment\n    pm.environment.set(\"bob_token\", res.access_token); \n    console.log(\"Token saved successfully:\", res.access_token.substring(0, 15) + \"...\");\n} else {\n    console.log(\"Error: No access_token found in response\", res);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "bob"
+                },
+                {
+                  "key": "password",
+                  "value": "password123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Alice (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();\nif (res.access_token) {\n    // Explicitly target the active environment\n    pm.environment.set(\"alice_token\", res.access_token); \n    console.log(\"Token saved successfully:\", res.access_token.substring(0, 15) + \"...\");\n} else {\n    console.log(\"Error: No access_token found in response\", res);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "alice"
+                },
+                {
+                  "key": "password",
+                  "value": "password123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Carol (Viewer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();\nif (res.access_token) {\n    // Explicitly target the active environment\n    pm.environment.set(\"carol_token\", res.access_token); \n    console.log(\"Token saved successfully:\", res.access_token.substring(0, 15) + \"...\");\n} else {\n    console.log(\"Error: No access_token found in response\", res);\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "username",
+                  "value": "carol"
+                },
+                {
+                  "key": "password",
+                  "value": "password123"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Security & Unauthenticated Tests",
+      "item": [
+        {
+          "name": "GET Articles Without Token (Expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Bob (Editor Role Tests)",
+      "item": [
+        {
+          "name": "Bob - GET Articles (Expect 200)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Check if Authorization header was sent",
+                  "const authHeader = pm.request.headers.get(\"Authorization\");",
+                  "",
+                  "if (authHeader) {",
+                  "    if (authHeader.startsWith(\"Bearer \")) {",
+                  "        const token = authHeader.substring(7); // strip \"Bearer \"",
+                  "        console.log(\"✅ Bearer token was sent\");",
+                  "        console.log(\"Token preview:\", token.substring(0, 15) + \"...\");",
+                  "        pm.test(\"Bearer token is present in request\", function () {",
+                  "            pm.expect(authHeader).to.match(/^Bearer .+/);",
+                  "        });",
+                  "    } else {",
+                  "        console.log(\"⚠️ Authorization header exists but is not a Bearer token:\", authHeader);",
+                  "    }",
+                  "} else {",
+                  "    console.log(\"❌ No Authorization header was sent\");",
+                  "    pm.test(\"Bearer token is present in request\", function () {",
+                  "        pm.expect.fail(\"No Authorization header found in request\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bob_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bob - POST Article (Expect 201)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bob_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bob - PUT Article (Expect 200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bob_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles/42",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "42"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bob - DELETE Article (Expect 403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bob_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles/42",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "42"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Carol (Viewer Role & Promotion)",
+      "item": [
+        {
+          "name": "Carol - GET Articles (Expect 200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{carol_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Carol - POST Article Before Promotion (Expect 403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{carol_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alice - Promote Carol to Editor in Postgres (Expect 201)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{alice_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"carol\",\n  \"role\": \"editor\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/api/roles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Carol - POST Article After Promotion (Expect 201)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{carol_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/api/articles",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "api",
+                "articles"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "api_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "keycloak_url",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "realm",
+      "value": "casbin-realm"
+    },
+    {
+      "key": "client_id",
+      "value": "casbin-api"
+    },
+    {
+      "key": "bob_token",
+      "value": ""
+    },
+    {
+      "key": "alice_token",
+      "value": ""
+    },
+    {
+      "key": "carol_token",
+      "value": ""
+    }
+  ]
+}

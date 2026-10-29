@@ -1,0 +1,9 @@
+p, admin, /api/*, (GET)|(POST)|(PUT)|(DELETE)
+p, editor, /api/articles, (GET)|(POST)
+p, editor, /api/articles/:id, (GET)|(PUT)
+p, viewer, /api/articles, GET
+p, viewer, /api/articles/:id, GET
+
+g, alice, admin
+g, bob, editor
+g, carol, viewer
